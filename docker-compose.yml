@@ -1,0 +1,58 @@
+services:
+  # MySQL Database
+  mysql:
+    image: mysql:8.0
+    container_name: password-manager-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: Password_Manager
+      MYSQL_USER: admin
+      MYSQL_PASSWORD: password
+    volumes:
+      - ./src/main/resources/database.sql:/docker-entrypoint-initdb.d/database.sql
+      - mysql_data:/var/lib/mysql
+    ports:
+      - "3306:3306"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-ppassword"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    networks:
+      - password-manager-network
+    
+  # Password Manager Application
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.simple
+    container_name: password-manager-app
+    environment:
+      # For Docker networking (default when using the same network)
+      DB_URL: jdbc:mysql://mysql:3306/Password_Manager
+      DB_USERNAME: root
+      DB_PASSWORD: password
+      DATABASE_HOST: mysql
+      DATABASE_PORT: 3306
+      DATABASE_NAME: Password_Manager
+      DISPLAY: ${DISPLAY:-:0}
+      JAVA_TOOL_OPTIONS: "-Djava.awt.headless=false -Dswing.defaultlaf=com.sun.java.swing.plaf.gtk.GTKLookAndFeel"
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix
+      - ${XAUTHORITY:-~/.Xauthority}:/home/root/.Xauthority
+    depends_on:
+      mysql:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - password-manager-network
+    # Additional permissions for X11
+    privileged: true
+
+volumes:
+  mysql_data:
+
+networks:
+  password-manager-network:
+    driver: bridge
