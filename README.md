@@ -11,6 +11,9 @@ A secure password management application built in Java with a user-friendly GUI 
 - **User-Friendly Interface**: Simple and intuitive GUI
 - **Containerized**: Run anywhere with Docker without installation hassle
 
+## Sample Screenshot:
+<img src = "https://github.com/user-attachments/assets/7ee62af1-ef38-4e61-85f1-891f75a7d39a" width = 50%>
+
 ## Running with Docker (Recommended)
 
 ### Prerequisites
