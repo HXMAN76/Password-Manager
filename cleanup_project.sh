@@ -18,13 +18,34 @@ docker compose down -v 2>/dev/null
 docker compose -f docker-compose.headless.yml down -v 2>/dev/null
 docker compose -f docker-compose.windows.yml down -v 2>/dev/null
 
+# Handle Docker files - if they exist but haven't been renamed yet
+echo "Processing Docker files..."
+if [ -f "Dockerfile.simple" ] && [ -f "Dockerfile" ]; then
+    rm -f Dockerfile.simple
+elif [ -f "Dockerfile.simple" ] && [ ! -f "Dockerfile" ]; then
+    mv Dockerfile.simple Dockerfile
+    echo "Renamed Dockerfile.simple to Dockerfile"
+fi
+
+if [ -f "docker-compose.simple.yml" ] && [ -f "docker-compose.yml" ]; then
+    rm -f docker-compose.simple.yml
+elif [ -f "docker-compose.simple.yml" ] && [ ! -f "docker-compose.yml" ]; then
+    mv docker-compose.simple.yml docker-compose.yml
+    echo "Renamed docker-compose.simple.yml to docker-compose.yml"
+fi
+
 # Remove unwanted redundant files
 echo "Removing redundant files..."
-rm -f Dockerfile.simple docker-compose.simple.yml cleanup.sh setup_offline_mode.sh setup_github.sh run_app_docker.sh 2>/dev/null
+rm -f cleanup.sh setup_offline_mode.sh setup_github.sh run_app_docker.sh 2>/dev/null
 
 # Clean up IDE-specific files
 echo "Cleaning up IDE files..."
 rm -rf .idea/ .classpath .project .settings/ *.iml 2>/dev/null
+
+# Update Docker Compose files to reference the correct Dockerfile
+echo "Updating Docker Compose files..."
+sed -i 's/dockerfile: Dockerfile.simple/dockerfile: Dockerfile/g' docker-compose.yml 2>/dev/null
+sed -i 's/dockerfile: Dockerfile.simple/dockerfile: Dockerfile/g' docker-compose.windows.yml 2>/dev/null
 
 # Make sure all shell scripts are executable
 echo "Making all shell scripts executable..."

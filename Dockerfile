@@ -1,4 +1,19 @@
-# Use Eclipse Temurin (AdoptOpenJDK) as it's well-maintained and lightweight
+# Use Maven image for building the application
+FROM maven:3.8-openjdk-11 AS builder
+
+# Set working directory
+WORKDIR /app
+
+# Copy the pom.xml file
+COPY pom.xml .
+
+# Copy the source code
+COPY src ./src
+
+# Build the application
+RUN mvn clean package -DskipTests
+
+# Use Eclipse Temurin (AdoptOpenJDK) as the runtime image
 FROM eclipse-temurin:11-jdk-focal
 
 # Install X11 libraries and utilities needed for GUI apps
@@ -15,8 +30,8 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /app
 
-# Copy the JAR files we need
-COPY target/password-manager-1.0-SNAPSHOT-jar-with-dependencies.jar /app/password-manager.jar
+# Copy the built JAR file from the builder stage
+COPY --from=builder /app/target/password-manager-1.0-SNAPSHOT-jar-with-dependencies.jar /app/password-manager.jar
 COPY src/main/resources/images /app/images
 COPY src/main/resources/config.properties /app/config.properties
 
